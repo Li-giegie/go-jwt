@@ -91,7 +91,9 @@ type StandardClaims struct {
 
 func (s *StandardClaims) Void()  {
 }
-
+func (s *StandardClaims) GetExpirationTime() int64 {
+	return s.Exp
+}
 type signature string
 func (s *signature) Marshal(_Header,_Payload string,key string)  {
 	*s = signature(_Header+"."+_Payload+"."+sign(_Header+"."+_Payload,key))

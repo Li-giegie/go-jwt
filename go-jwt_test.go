@@ -17,7 +17,9 @@ type A struct {
 
 func (a A) Void()  {
 }
-
+func (a A) GetExpirationTime() int64 {
+	return 123
+}
 func Test_Token(t *testing.T) {
 
 	var token = Token{
