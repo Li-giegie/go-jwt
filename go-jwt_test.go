@@ -1,45 +1,59 @@
 package go_jwt
 
 import (
+	"encoding/base64"
 	"fmt"
 	"testing"
+	"time"
 )
 
 type MyClaims struct {
 	StandardClaims
+	ASDF string
 }
 
-type A struct {
-	Sub  string `json:"sub,omitempty"`
-	Name string `json:"name,omitempty"`
-	Iat  int64  `json:"iat,omitempty"`
-}
 
-func (a A) Void()  {
-}
-func (a A) GetExpirationTime() int64 {
-	return 123
-}
+
 func Test_Token(t *testing.T) {
 
+	var key = "黑猫警长"
 	var token = Token{
 		Header:    Header{
 			Alg: "HS256",
 			Typ: "JWT",
 		},
-		ClaimsI :&A{
-			Sub: "1234567890",
-			Name: "John Doe",
-			Iat: 1516239022,
+		ClaimsI :&MyClaims{
+			StandardClaims:StandardClaims{
+				Iss: "",
+				Sub: "",
+				Aud: "",
+				Exp: time.Now().UnixNano()+time.Second.Nanoseconds(),
+				Nbf: 0,
+				Iat: 0,
+				Jti: "",
+			},
+			ASDF: "hello word !",
 		},
 	}
-	var l = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.PjndlgESbR_7uPWq7tKFd6o7l799Y45mU5KvDcO2nPI"
-	tokenStr ,err:= token.Marshal("12345678")
-	fmt.Println(tokenStr == l,err,tokenStr)
+	//time.Sleep(time.Second)
+	tokenStr,err := token.Marshal(key)
+	fmt.Println("token : ",tokenStr,err)
 
-	var token2 Token
-	var a A
-	fmt.Println(token2.Unmarshal(tokenStr,"12345678",&a),a)
+	var myClaims MyClaims
+	for  {
+		err = Unmarshal(tokenStr,key,&myClaims)
+		fmt.Println(err,myClaims)
+		if err != nil {
+			return
+		}
+		time.Sleep(time.Second)
+	}
 
 
+}
+
+func TestName(t *testing.T) {
+
+	a,err := base64.RawURLEncoding.DecodeString(("eyJhIjoiMSJ9"))
+	fmt.Println(string(a),err)
 }

@@ -4,6 +4,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"strings"
+	"time"
 )
 
 type Token struct {
@@ -22,7 +23,7 @@ func (t *Token) Marshal(key string) (string,error) {
 	t.signature.Marshal(t.Header.base64UrlCode,string(t.Payload),key)
 	return string(t.signature),nil
 }
-func (t *Token) Unmarshal(tokenStr string,key string,obj interface{}) error {
+func (t *Token) Unmarshal(tokenStr string,key string,obj ClaimsI) error {
 	var err error
 	_tmp := strings.Split(tokenStr,".")
 	t.Header.base64UrlCode,t.Payload,t.signature = _tmp[0],Payload(_tmp[1]),signature(_tmp[2])
@@ -33,8 +34,15 @@ func (t *Token) Unmarshal(tokenStr string,key string,obj interface{}) error {
 	if err = t.Header.Unmarshal(); err != nil {
 		return err
 	}
+	if err = t.Payload.Unmarshal(obj); err != nil {
+		return err
+	}
+	t.ClaimsI = obj
 
-	return t.Payload.Unmarshal(obj)
+	if t.ClaimsI.GetExpirationTime() <= time.Now().UnixNano() {
+		return ExpirationTime_ERR
+	}
+	return nil
 }
 
 type Header struct {
@@ -103,4 +111,8 @@ func (s *signature) Unmarshal(_Header,_Payload string,key string) error {
 		return ModfToken_ERR
 	}
 	return nil
+}
+
+func Unmarshal(tokenStr,key string, c ClaimsI) error{
+	return (&Token{}).Unmarshal(tokenStr,key,c)
 }
